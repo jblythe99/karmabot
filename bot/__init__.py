@@ -16,7 +16,7 @@ if not botuser or not token:
 KARMA_BOT = botuser
 SLACK_CLIENT = SlackClient(token)
 
-MAX_POINTS = 5
+MAX_POINTS = 1
 
 # the first +/- is merely signaling, start counting (regex capture)
 # from second +/- onwards, so bob++ adds 1 point, bob+++ = +2, etc
