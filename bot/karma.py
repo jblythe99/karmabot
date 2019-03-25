@@ -1,5 +1,8 @@
-from . import IS_USER, MAX_POINTS, karmas
+from . import IS_USER, MAX_POINTS, SLACK_CLIENT, karmas
 from .slack import lookup_username, post_msg
+import logging
+import json
+from bson import BSON, json_util
 
 KARMABOT = 'karmabot'
 
@@ -50,7 +53,10 @@ class Karma:
             return points
 
     def _create_msg_bot_self_karma(self, points):
-        receiver_karma = karmas.get(self.receiver, 0)
+        rec = karmas.find_one({"user":self.receiver})
+        logging.debug(rec)
+        receiver_karma = rec['karma']
+        logging.debug(receiver_karma)
         if points > 0:
             msg = 'Thanks @{} for the extra karma'.format(self.giver)
             msg += ', my karma is {} now'.format(receiver_karma)
@@ -62,11 +68,16 @@ class Karma:
         return msg
 
     def _create_msg(self, points):
-        poses = "'" if self.receiver.endswith('s') else "'s"
-        action = 'increase' if points > 0 else 'decrease'
-        receiver_karma = karmas.get(self.receiver, 0)
 
-        msg = '{}{} karma {}d to {}'.format(self.receiver,
+        userinfo = SLACK_CLIENT.api_call("users.info", user=self.receiver)
+        username = userinfo['user']['name']
+
+        poses = "'" if username.endswith('s') else "'s"
+        action = 'increase' if points > 0 else 'decrease'
+        rec = karmas.find_one({"user":self.receiver})
+        receiver_karma = rec['karma']
+
+        msg = '{}{} karma {}d to {}'.format(username,
                                             poses,
                                             action,
                                             receiver_karma)
@@ -77,20 +88,22 @@ class Karma:
 
     def change_karma(self, points):
         '''updates karmas dict and returns message string'''
-        if not isinstance(points, int):
-            err = ('Program bug: change_karma should '
-                   'not be called with a non int for '
-                   'points arg!')
-            raise RuntimeError(err)
+        userinfo = SLACK_CLIENT.api_call("users.info", user=self.receiver)
+        if userinfo['ok']:
+            if not isinstance(points, int):
+                err = ('Program bug: change_karma should '
+                       'not be called with a non int for '
+                       'points arg!')
+                raise RuntimeError(err)
 
-        if self.giver == self.receiver:
-            raise ValueError('Sorry, cannot give karma to self')
+            if self.giver == self.receiver:
+                raise ValueError('Sorry, cannot give karma to self')
+                #raise ValueError(self.giver)
 
-        points = self._calc_final_score(points)
+            points = self._calc_final_score(points)
+            karmas.update_one({"user":self.receiver},{"$inc":{"karma":1}})
 
-        karmas[self.receiver] += points
-
-        if self.receiver == KARMABOT:
-            return self._create_msg_bot_self_karma(points)
-        else:
-            return self._create_msg(points)
+            if self.receiver == KARMABOT:
+                return self._create_msg_bot_self_karma(points)
+            else:
+                return self._create_msg(points)

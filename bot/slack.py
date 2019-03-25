@@ -4,7 +4,9 @@ import os
 
 from slackclient import SlackClient
 
-from . import KARMA_BOT, SLACK_CLIENT, USERNAME_CACHE
+from . import KARMA_BOT, SLACK_CLIENT, karmas
+import json
+from bson import BSON, json_util
 
 # bot commands
 from commands.add import add_command
@@ -54,12 +56,17 @@ def create_help_msg(is_admin):
 
 def lookup_username(userid):
     user = userid.strip('<>@')
-    username = USERNAME_CACHE.get(user)
-    if not username:
+    #logging.debug(user)
+    rec = karmas.find_one({"user":user})
+    #logging.debug(username)
+    if rec is None:
         userinfo = SLACK_CLIENT.api_call("users.info", user=user)
         username = userinfo['user']['name']
-        USERNAME_CACHE[user] = username
-    return username
+        #logging.debug(username)
+        karmas.insert_one({"user":user,"username":username,"karma":0})
+    #else:
+    #    username = rec['username']
+    return user
 
 
 def post_msg(channel_or_user, text):
