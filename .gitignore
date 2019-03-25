@@ -6,4 +6,4 @@ venv
 data
 .*cache*
 .coverage
-hohup*
+nohup*
