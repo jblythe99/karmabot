@@ -1,4 +1,4 @@
-from . import IS_USER, MAX_POINTS, SLACK_CLIENT, karmas
+from . import IS_USER, MAX_POINTS, SLACK_CLIENT, store, karmas
 from .slack import lookup_username, post_msg
 import logging
 import json
@@ -53,8 +53,7 @@ class Karma:
             return points
 
     def _create_msg_bot_self_karma(self, points):
-        rec = karmas.find_one({"user":self.receiver})
-        logging.debug(rec)
+        rec = store.get_user(karmas, self.receiver)
         receiver_karma = rec['karma']
         logging.debug(receiver_karma)
         if points > 0:
@@ -74,8 +73,9 @@ class Karma:
 
         poses = "'" if username.endswith('s') else "'s"
         action = 'increase' if points > 0 else 'decrease'
-        rec = karmas.find_one({"user":self.receiver})
-        receiver_karma = rec['karma']
+        #rec = karmas.find_one({"user":self.receiver})
+        #receiver_karma = rec['karma']
+        receiver_karma = store.get_karma(karmas, self.receiver)
 
         msg = '{}{} karma {}d to {}'.format(username,
                                             poses,
@@ -98,10 +98,11 @@ class Karma:
 
             if self.giver == self.receiver:
                 raise ValueError('Sorry, cannot give karma to self')
-                #raise ValueError(self.giver)
 
             points = self._calc_final_score(points)
-            karmas.update_one({"user":self.receiver},{"$inc":{"karma":1}})
+            store.pos_karma(karmas, self.receiver) if points > 0 else store.neg_karma(karmas, self.receiver)
+            #karmas.update_one({"user":self.receiver},{"$inc":{"karma":1}})
+            """post to #thanks channel or equivalent"""
 
             if self.receiver == KARMABOT:
                 return self._create_msg_bot_self_karma(points)

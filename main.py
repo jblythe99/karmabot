@@ -2,7 +2,7 @@ import logging
 import sys
 import time
 
-from bot import SLACK_CLIENT, KARMA_ACTION, karmas
+from bot import SLACK_CLIENT, KARMA_ACTION
 from bot.slack import parse_next_msg
 from bot.karma import process_karma_changes
 
@@ -28,6 +28,8 @@ def main():
                 continue
 
             logging.debug('karma changes: {}'.format(str(karma_changes)))
+            """add exclusion list for channels to do karma in"""
+            """give feedback if channel does not accept karma?"""
             process_karma_changes(message, karma_changes)
     finally:
         logging.info('Script ended, saving karma cache to file')

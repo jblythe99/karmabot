@@ -1,10 +1,18 @@
 from collections import Counter
 import logging
 import os
-import pickle
 import re
 import sys
-from pymongo import MongoClient
+
+import pkgutil
+import importlib
+from typing import List
+
+import bot
+from bot.base import REGISTERED_CLASSES
+
+pkg = bot
+
 from slackclient import SlackClient
 
 logging.basicConfig(level=logging.DEBUG,
@@ -18,13 +26,17 @@ if not botuser or not token:
     print('Make sure you set SLACK_KARMA_BOTUSER and SLACK_KARMA_TOKEN in env')
     sys.exit(1)
 
-client = MongoClient('mongodb://localhost:27017')
-db = client.local
-karmas = db.karma
+for mod_info in pkgutil.iter_modules(pkg.__path__):
+    if mod_info.name.startswith('connectors'):
+        module = importlib.import_module('bot.'+mod_info.name)
+        module_path: List[str] = module.__path__
+        for pkg_info in pkgutil.walk_packages(module_path, module.__name__+'.'):
+            importlib.import_module(pkg_info.name)
 
-if not client:
-    print('Mongo Database not started')
-    sys.exit(1)
+
+store = REGISTERED_CLASSES['MONGO']()
+conn = store.get_connection()
+karmas = store.get_karmas(conn)
 
 #check if database exists?
 
@@ -39,15 +51,6 @@ MAX_POINTS = 2
 KARMA_ACTION = re.compile(r'(?:^| )(\S{2,}?)\s?[\+\-]([\+\-]+)')
 IS_USER = re.compile(r'^<@[^>]+>$')
 
-#USERNAME_CACHE = {}
-#KARMA_CACHE = 'data'
+
 
 logging.info('Script started')
-
-#try:
-
-    #logging.info('Retrieving karma cache file')
-    #karmas = pickle.load(open(KARMA_CACHE, "rb"))
-#except FileNotFoundError:
-    #logging.info('No cache file starting new Counter object in memory')
-    #karmas = Counter()

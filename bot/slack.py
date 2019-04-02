@@ -4,7 +4,7 @@ import os
 
 from slackclient import SlackClient
 
-from . import KARMA_BOT, SLACK_CLIENT, karmas
+from . import KARMA_BOT, SLACK_CLIENT, karmas, store
 import json
 from bson import BSON, json_util
 
@@ -22,6 +22,7 @@ from commands.zen import import_this
 
 Message = namedtuple('Message', 'giverid channel text')
 
+THANKS_CHANNEL = ''
 GENERAL_CHANNEL = 'C4SFQJJ9Z'
 ADMINS = ('U4RTDPKUH', 'U4TN52NG6', 'U4SJVFMEG')  # bob, julian, pybites
 TEXT_FILTER_REPLIES = dict(zen='`import this`',
@@ -56,14 +57,13 @@ def create_help_msg(is_admin):
 
 def lookup_username(userid):
     user = userid.strip('<>@')
-    #logging.debug(user)
-    rec = karmas.find_one({"user":user})
-    #logging.debug(username)
+    #rec = karmas.find_one({"user":user})
+    rec = store.get_user(karmas, user)
     if rec is None:
         userinfo = SLACK_CLIENT.api_call("users.info", user=user)
         username = userinfo['user']['name']
-        #logging.debug(username)
-        karmas.insert_one({"user":user,"username":username,"karma":0})
+        store.add_user(karmas, user, username)
+        #karmas.insert_one({"user":user,"username":username,"karma":0})
     #else:
     #    username = rec['username']
     return user
@@ -149,6 +149,7 @@ def perform_bot_cmd(msg, private=True):
 
     if not command:
         return None
+        #return cmd
 
     kwargs = dict(user=lookup_username(user),
                   channel=channel,
