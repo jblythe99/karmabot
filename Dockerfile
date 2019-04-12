@@ -7,8 +7,8 @@ WORKDIR /opt/jblythe
 RUN git clone https://github.com/jblythe99/karmabot.git
 
 ENV SLACK_KARMA_BOTUSER=UH2R4CQEQ
-ENV SLACK_KARMA_TOKEN=xoxb-455015788833-580854432500-R0uVjzKxfwuWHg7c7T7GyGxM
+ENV SLACK_KARMA_TOKEN=xoxp-455015788833-455451203892-594652601923-624a8a73796a6fc1fad32813af4ea638
 
 RUN pip install pymongo slackclient feedparser
 
-RUN cd karmabot && pip install -r requirements.txt && sh run.sh
+ENTRYPOINT cd karmabot && pip install -r requirements.txt && sh run.sh
