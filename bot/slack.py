@@ -3,6 +3,7 @@ import logging
 import os
 
 from slackclient import SlackClient
+import pymongo
 
 from . import KARMA_BOT, SLACK_CLIENT, karmas, store
 import json

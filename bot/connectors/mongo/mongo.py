@@ -5,7 +5,7 @@ from bot.base import connector
 class Mongo(object):
 
     def get_connection(self):
-        client = MongoClient('mongodb://localhost:27017')
+        client = MongoClient('mongodb://mongo:27017')
 
         if not client:
             print('Mongo Database not started')

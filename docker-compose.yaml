@@ -1,0 +1,14 @@
+
+version: '3'
+services:
+  web:
+    image: jblythe99/karmabot
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/todo
+    env_file:
+      - .env
+  
+  mongo:
+    image: mongo:3.0.2

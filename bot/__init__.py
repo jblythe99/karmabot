@@ -20,8 +20,8 @@ logging.basicConfig(level=logging.DEBUG,
                     datefmt='%m-%d %H:%M',
                     filename='bot.log')
 
-botuser = os.environ.get('SLACK_KARMA_BOTUSER')
-token = os.environ.get('SLACK_KARMA_TOKEN')
+botuser = os.environ['SLACK_KARMA_BOTUSER']
+token = os.environ['SLACK_KARMA_TOKEN']
 if not botuser or not token:
     print('Make sure you set SLACK_KARMA_BOTUSER and SLACK_KARMA_TOKEN in env')
     sys.exit(1)
